@@ -215,7 +215,7 @@ img { display: block; max-width: 100%; }
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   box-shadow: var(--shadow-lg);
-  transform: rotate(2deg);
+  transform: none;
 }
 
 .sample-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-5); }
@@ -822,7 +822,7 @@ a.contact-item:active { transform: scale(0.98); }
   .hero h1 { font-size: clamp(44px, 16vw, 62px); }
   .hero-lead { font-size: 18px; }
   .hero-actions { display: grid; grid-template-columns: 1fr 1fr; }
-  .sample-card { transform: rotate(1deg); }
+  .sample-card { transform: none; }
   .sample-meta { flex-direction: column; }
   .field-row, .product-form { grid-template-columns: 1fr; }
   .avatar-upload, .qr-upload { grid-template-columns: 1fr; }
