@@ -4,4 +4,4 @@ uploads/*
 !uploads/.gitkeep
 .data/
 npm-debug.log*
-
+*.zip

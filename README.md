@@ -62,6 +62,8 @@ npm start
 
 打开 <http://localhost:3000>。
 
+准备上传阿里云轻量应用服务器时，请参阅 [`DEPLOY_ALIYUN.md`](./DEPLOY_ALIYUN.md)。
+
 默认不要求额外安装数据库：开发环境使用文件持久化的 PGlite（PostgreSQL WASM），数据保存在 `.data/pglite`。它执行同一份 PostgreSQL SQL。
 
 若要连接常规 PostgreSQL：
