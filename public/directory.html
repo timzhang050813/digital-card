@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="集中浏览联系人名片与产品的数码名片夹。">
+  <title>名片夹｜数码名片</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="directory-page">
+  <header class="site-header">
+    <nav class="nav container directory-nav" aria-label="主导航">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true">数</span>
+        <span>数码名片</span>
+      </a>
+      <div class="nav-actions">
+        <span class="directory-nav-title">名片夹</span>
+        <a class="button button-secondary button-small" href="/editor.html">编辑我的名片</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="directory-main">
+    <div class="directory-shell" id="directory-shell">
+      <aside class="directory-sidebar" aria-labelledby="directory-title">
+        <div class="directory-sidebar-head">
+          <div>
+            <p class="directory-eyebrow">DIGITAL CONTACTS</p>
+            <h1 id="directory-title">名片夹</h1>
+          </div>
+          <span class="directory-count" id="directory-count">—</span>
+        </div>
+        <label class="directory-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="directory-search" type="search" placeholder="搜索姓名、公司或关键词" autocomplete="off">
+        </label>
+        <div class="directory-contact-list" id="directory-contact-list" aria-live="polite">
+          <div class="directory-list-skeleton" aria-label="正在加载名片夹">
+            <div class="directory-contact-skeleton skeleton"></div>
+            <div class="directory-contact-skeleton skeleton"></div>
+            <div class="directory-contact-skeleton skeleton"></div>
+          </div>
+        </div>
+        <p class="directory-demo-note">演示数据 · 选择任意联系人查看名片和产品</p>
+      </aside>
+
+      <section class="directory-detail" aria-labelledby="selected-name">
+        <header class="directory-detail-head">
+          <button class="directory-back" id="directory-back" type="button" aria-label="返回联系人列表">←</button>
+          <div>
+            <p>当前名片</p>
+            <h2 id="selected-name">正在加载…</h2>
+          </div>
+          <a class="button button-secondary button-small" id="selected-public-link" href="#">打开公开名片</a>
+        </header>
+        <div class="directory-detail-scroll" id="directory-detail-scroll">
+          <div class="directory-detail-inner" id="directory-detail-inner">
+            <section class="public-card" aria-label="名片加载中">
+              <div class="public-card-side skeleton"></div>
+              <div class="public-card-body">
+                <div class="skeleton skeleton-line short"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line short"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="/directory.js"></script>
+</body>
+</html>

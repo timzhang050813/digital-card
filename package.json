@@ -1,0 +1,26 @@
+{
+  "name": "digital-card-mvp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "数码名片 MVP：注册、创建名片、公开展示",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server/index.js",
+    "start": "node server/index.js",
+    "check": "node --check server/index.js && node --check server/site-import.js && node --check public/app.js && node --check public/auth.js && node --check public/editor.js && node --check public/card.js && node --check public/directory.js"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.10",
+    "bcryptjs": "^3.0.2",
+    "cheerio": "^1.2.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "pg": "^8.16.3",
+    "tesseract.js": "^7.0.0"
+  }
+}

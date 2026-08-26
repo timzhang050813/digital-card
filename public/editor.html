@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="创建和修改你的数码名片。">
+  <title>我的名片｜数码名片</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container" aria-label="主导航">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true">数</span>
+        <span>数码名片</span>
+      </a>
+      <div class="nav-actions">
+        <a class="button button-ghost button-small" id="directory-nav-link" href="/directory.html">名片夹</a>
+        <span class="field-hint" id="user-email" aria-label="当前账号"></span>
+        <button class="button button-ghost button-small" id="logout-button" type="button">退出</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-main">
+    <div class="container">
+      <div class="page-heading">
+        <div>
+          <h1>我的名片</h1>
+          <p>填写真实、清晰的信息，让别人也让 AI 更好地理解你。</p>
+        </div>
+        <a class="button button-secondary is-disabled" id="view-card-top" href="#" aria-disabled="true">查看公开名片</a>
+      </div>
+
+      <div class="editor-layout">
+        <section class="panel editor-panel" aria-labelledby="edit-heading">
+          <h2 id="edit-heading">名片信息</h2>
+          <p class="section-copy">带 * 的项目为必填，其他信息可随时回来补充。</p>
+
+          <section class="scan-panel" aria-labelledby="scan-heading">
+            <div class="scan-intro">
+              <div class="scan-icon" aria-hidden="true">识</div>
+              <div>
+                <h3 id="scan-heading">从纸质名片导入</h3>
+                <p>拍照或上传名片图片，识别姓名、公司、职务和联系方式。</p>
+              </div>
+            </div>
+            <form class="scan-form" id="scan-form" enctype="multipart/form-data">
+              <input class="visually-hidden" id="business-card-image" name="business_card" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required>
+              <label class="scan-file" for="business-card-image">
+                <span>选择纸质名片照片</span>
+                <small id="scan-file-name">JPG、PNG、WebP 或 GIF，最大 5MB</small>
+              </label>
+              <button class="button button-secondary" id="scan-button" type="submit">识别并填写</button>
+            </form>
+            <p class="scan-privacy">照片仅用于本次本地识别，完成后立即删除；已填写的内容不会被覆盖。</p>
+            <div class="scan-result" id="scan-result" hidden>
+              <strong id="scan-result-title">识别结果</strong>
+              <pre id="scan-raw-text"></pre>
+            </div>
+            <p class="form-error" id="scan-error" role="alert"></p>
+          </section>
+
+          <div id="editor-loading" aria-label="正在加载名片">
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line short"></div>
+            <div class="skeleton skeleton-line"></div>
+          </div>
+
+          <form id="card-form" enctype="multipart/form-data" hidden>
+            <div class="form-section">
+              <h3 class="form-section-title">名片主体</h3>
+              <div class="field">
+                <label for="avatar">头像 / Logo <span class="field-hint">JPG、PNG、WebP 或 GIF，最大 5MB</span></label>
+                <div class="avatar-upload">
+                  <div class="avatar-preview" id="avatar-preview" aria-label="头像预览">名片</div>
+                  <input class="file-input" id="avatar" name="avatar" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="name">姓名 / 主名称 *</label>
+                  <input class="input" id="name" name="name" required maxlength="80" placeholder="例如：林知远">
+                </div>
+                <div class="field">
+                  <label for="company_name">公司 / 组织</label>
+                  <input class="input" id="company_name" name="company_name" maxlength="120" placeholder="例如：远山设计有限公司">
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="department">部门</label>
+                  <input class="input" id="department" name="department" maxlength="100" placeholder="例如：产品设计部">
+                </div>
+                <div class="field">
+                  <label for="job_title">职务 / 身份</label>
+                  <input class="input" id="job_title" name="job_title" maxlength="100" placeholder="例如：设计总监">
+                </div>
+              </div>
+              <div class="field">
+                <label for="tagline">一句话简介</label>
+                <input class="input" id="tagline" name="tagline" maxlength="120" placeholder="一句话说清你和你的业务">
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">专业与业务</h3>
+              <div class="field-row">
+                <div class="field">
+                  <label for="expertise">专业 / 擅长领域</label>
+                  <input class="input" id="expertise" name="expertise" maxlength="200" placeholder="例如：产品策略、体验设计">
+                </div>
+                <div class="field">
+                  <label for="main_business">主营业务 / 服务</label>
+                  <input class="input" id="main_business" name="main_business" maxlength="200" placeholder="例如：品牌设计、数字产品咨询">
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="founded_at">公司成立时间 <span class="field-hint">选填</span></label>
+                  <input class="input" id="founded_at" name="founded_at" maxlength="30" placeholder="例如：2021 年">
+                </div>
+                <div class="field">
+                  <label for="team_size">团队规模 <span class="field-hint">选填</span></label>
+                  <input class="input" id="team_size" name="team_size" maxlength="50" placeholder="例如：10–20 人">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">联系方式</h3>
+              <div class="field-row">
+                <div class="field">
+                  <label for="phone">手机号</label>
+                  <input class="input" id="phone" name="phone" type="tel" maxlength="30" placeholder="手机号">
+                </div>
+                <div class="field">
+                  <label for="telephone">座机</label>
+                  <input class="input" id="telephone" name="telephone" type="tel" maxlength="30" placeholder="例如：021-12345678">
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="contact_email">联系邮箱</label>
+                  <input class="input" id="contact_email" name="contact_email" type="email" maxlength="254" placeholder="对外展示的邮箱">
+                </div>
+                <div class="field">
+                  <label for="wechat-qr">微信二维码 <span class="field-hint">建议使用二维码原图或清晰截图</span></label>
+                  <div class="qr-upload">
+                    <div class="qr-preview" id="qr-preview" aria-label="微信二维码预览">二维码</div>
+                    <div class="qr-upload-actions">
+                      <input class="file-input" id="wechat-qr" name="wechat_qr" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                      <button class="button button-danger button-small" id="remove-qr" type="button" hidden>移除二维码</button>
+                    </div>
+                  </div>
+                  <input id="wechat" name="wechat" type="hidden">
+                  <input id="remove-wechat-qr" name="remove_wechat_qr" type="hidden" value="0">
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="website">官网 / 个人主页</label>
+                  <input class="input" id="website" name="website" type="url" maxlength="300" placeholder="https://example.com">
+                </div>
+                <div class="field">
+                  <label for="region">所在地区</label>
+                  <input class="input" id="region" name="region" maxlength="100" placeholder="例如：上海">
+                </div>
+              </div>
+              <div class="field">
+                <label for="address">详细地址</label>
+                <input class="input" id="address" name="address" maxlength="200" placeholder="办公地址或联系地址">
+              </div>
+              <div class="field">
+                <label for="bio">简介文字 <span class="field-hint">最多 200 字</span></label>
+                <textarea class="textarea" id="bio" name="bio" maxlength="200" placeholder="介绍你的经历、能力、业务或组织愿景。"></textarea>
+                <span class="char-count" id="bio-count">0 / 200</span>
+              </div>
+            </div>
+
+            <p class="form-error" id="card-error" role="alert"></p>
+            <div class="editor-actions">
+              <button class="button" id="save-card" type="submit">保存名片</button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="panel preview-panel" aria-labelledby="preview-heading">
+          <div class="preview-panel-head">
+            <h2 id="preview-heading">正面预览</h2>
+            <span class="status-badge" id="publish-status">未发布</span>
+          </div>
+          <div class="mini-card">
+            <div class="mini-avatar" id="mini-avatar">名片</div>
+            <h3 id="mini-name">你的名称</h3>
+            <p class="mini-identity" id="mini-identity">公司 · 部门 · 职务</p>
+            <p class="mini-tagline" id="mini-tagline">一句话介绍你自己</p>
+            <hr>
+            <div class="mini-card-footer">
+              <div class="mini-meta">
+                <span id="mini-region">所在地区</span>
+                <span id="mini-role">专业领域或主营业务</span>
+              </div>
+              <div class="mini-qr" id="mini-qr" aria-label="微信二维码" hidden></div>
+            </div>
+          </div>
+          <a class="button button-secondary button-block preview-link is-disabled" id="view-card" href="#" aria-disabled="true">查看公开名片</a>
+        </aside>
+      </div>
+
+      <section class="panel products-section" aria-labelledby="products-heading">
+        <h2 id="products-heading">产品与作品</h2>
+        <p class="section-copy">从公司官网提取产品，也可以手动补充；公开页会以精致的横向目录展示。</p>
+        <div class="product-import-bar">
+          <div class="product-import-icon" aria-hidden="true">链</div>
+          <div class="product-import-copy">
+            <strong>从公司官网抓取</strong>
+            <span>自动识别产品名称、关键介绍、缩略图和详情链接，已有链接不会重复添加。</span>
+          </div>
+          <button class="button button-secondary" id="import-products" type="button">抓取官网产品</button>
+          <p class="product-import-status" id="product-import-status" role="status"></p>
+        </div>
+        <form class="product-form" id="product-form" enctype="multipart/form-data">
+          <div class="field product-image-field">
+            <label for="product-image">产品图片 *</label>
+            <input class="file-input" id="product-image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required>
+          </div>
+          <div class="field">
+            <label for="product-name">产品名称 *</label>
+            <input class="input" id="product-name" name="name" maxlength="100" required placeholder="产品或服务名称">
+          </div>
+          <div class="field">
+            <label for="external-url">外部链接</label>
+            <input class="input" id="external-url" name="external_url" type="url" maxlength="1000" placeholder="https://example.com/product">
+          </div>
+          <div class="field product-description-field">
+            <label for="product-description">产品简介 <span class="field-hint">最多 320 字</span></label>
+            <textarea class="textarea textarea-compact" id="product-description" name="description" maxlength="320" placeholder="用一两句话说明产品用途、特点或适用场景。"></textarea>
+          </div>
+          <button class="button button-secondary" id="add-product" type="submit">添加产品</button>
+          <p class="form-error" id="product-error" role="alert"></p>
+        </form>
+        <div class="product-grid" id="product-grid" aria-live="polite">
+          <div class="empty-state" id="products-loading">
+            <div>
+              <div class="empty-icon skeleton" aria-hidden="true"></div>
+              <h3>正在加载产品</h3>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="/editor.js"></script>
+</body>
+</html>

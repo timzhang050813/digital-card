@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="登录或注册数码名片账号。">
+  <title>登录 / 注册｜数码名片</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container" aria-label="主导航">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true">数</span>
+        <span>数码名片</span>
+      </a>
+      <a class="button button-ghost button-small" href="/">返回首页</a>
+    </nav>
+  </header>
+
+  <main class="auth-main">
+    <div class="container auth-shell">
+      <div class="auth-heading">
+        <h1 id="auth-title">创建你的数码名片</h1>
+        <p id="auth-subtitle">用一个账号，开始整理你的数字身份。</p>
+      </div>
+      <section class="panel auth-panel" aria-labelledby="auth-title">
+        <div class="tabs" role="tablist" aria-label="登录与注册">
+          <button class="tab" id="login-tab" type="button" role="tab" aria-controls="auth-form" aria-selected="false" data-mode="login">登录</button>
+          <button class="tab" id="register-tab" type="button" role="tab" aria-controls="auth-form" aria-selected="true" data-mode="register">注册</button>
+        </div>
+        <form class="auth-form" id="auth-form" novalidate>
+          <div class="field">
+            <label for="email">邮箱</label>
+            <input class="input" id="email" name="email" type="email" autocomplete="email" placeholder="name@example.com" required maxlength="254">
+          </div>
+          <div class="field">
+            <label for="password">密码 <span class="field-hint" id="password-hint">至少 8 个字符</span></label>
+            <input class="input" id="password" name="password" type="password" autocomplete="new-password" placeholder="输入密码" required minlength="8" maxlength="72">
+          </div>
+          <p class="form-error" id="form-error" role="alert"></p>
+          <button class="button button-block form-submit" id="submit-button" type="submit">注册并创建名片</button>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="/auth.js"></script>
+</body>
+</html>
+
