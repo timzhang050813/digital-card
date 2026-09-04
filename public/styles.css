@@ -283,18 +283,31 @@ img { display: block; max-width: 100%; }
 
 .page-main { padding: var(--space-10) 0 var(--space-16); }
 
-/* 编辑器是一张较长的表单：滚动由页面文档承接，避免触摸设备把上滑手势困在表单控件中。 */
-.editor-page {
+/* 编辑器是一张较长的表单：强制由根文档承接滚动，避免任何布局容器锁住页面。 */
+html.editor-document {
+  height: auto;
   min-height: 100%;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: scroll;
+}
+
+.editor-page {
+  display: block;
+  height: auto;
+  min-height: 100dvh;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .editor-page .page-main {
+  display: block;
+  height: auto;
+  max-height: none;
   min-height: auto;
-  overflow: visible;
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible !important;
+  touch-action: auto;
+  overscroll-behavior: auto;
 }
 .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-6); margin-bottom: var(--space-8); }
 .page-heading h1 { margin: 0; font-size: clamp(30px, 5vw, 44px); line-height: 1.15; letter-spacing: -0.04em; }
