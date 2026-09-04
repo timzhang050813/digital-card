@@ -20,6 +20,7 @@ const publicDirectory = path.join(rootDirectory, 'public');
 const uploadDirectory = path.join(rootDirectory, 'uploads');
 const app = express();
 const port = Number(process.env.PORT || 3000);
+const virtualSmsCodes = new Map();
 
 app.disable('x-powered-by');
 app.use(helmet({
@@ -30,6 +31,10 @@ app.use(helmet({
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:', 'blob:'],
       scriptSrc: ["'self'"],
+      // The current test deployment is served over plain HTTP on an IP address.
+      // Disable Helmet's default upgrade directive so browsers do not rewrite
+      // CSS, JavaScript, and image requests to unavailable HTTPS URLs.
+      upgradeInsecureRequests: null,
     },
   },
 }));
@@ -75,6 +80,36 @@ function validEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
 }
 
+function normalizePhone(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (/^1\d{10}$/.test(digits)) return digits;
+  return '';
+}
+
+function createVirtualSmsCode(phone, purpose) {
+  const key = `${purpose}:${phone}`;
+  const previous = virtualSmsCodes.get(key);
+  const now = Date.now();
+  if (previous && previous.sentAt > now - 30_000) {
+    const waitSeconds = Math.ceil((previous.sentAt + 30_000 - now) / 1000);
+    return { error: `请在 ${waitSeconds} 秒后再获取验证码` };
+  }
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  virtualSmsCodes.set(key, { code, sentAt: now, expiresAt: now + 5 * 60_000 });
+  return { code };
+}
+
+function consumeVirtualSmsCode(phone, purpose, code) {
+  const key = `${purpose}:${phone}`;
+  const record = virtualSmsCodes.get(key);
+  virtualSmsCodes.delete(key);
+  if (!record || record.expiresAt < Date.now() || record.code !== String(code || '').trim()) {
+    return false;
+  }
+  return true;
+}
+
 function validExternalUrl(value) {
   if (!value) return true;
   try {
@@ -94,21 +129,23 @@ async function removeUploadedFile(url) {
 app.post('/api/auth/register', authLimiter, async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
+    const phone = req.body.phone ? normalizePhone(req.body.phone) : null;
     const password = String(req.body.password || '');
     if (!validEmail(email)) return res.status(400).json({ error: '请输入有效的邮箱地址' });
+    if (req.body.phone && !phone) return res.status(400).json({ error: '请输入有效的 11 位手机号' });
     if (password.length < 8 || password.length > 72) {
       return res.status(400).json({ error: '密码需为 8–72 个字符' });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
     const result = await query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
-      [email, passwordHash],
+      'INSERT INTO users (email, phone, password_hash) VALUES ($1, $2, $3) RETURNING id, email, phone',
+      [email, phone, passwordHash],
     );
     issueAuthCookie(res, result.rows[0]);
     return res.status(201).json({ user: result.rows[0] });
   } catch (error) {
-    if (error.code === '23505') return res.status(409).json({ error: '该邮箱已注册' });
+    if (error.code === '23505') return res.status(409).json({ error: '该邮箱或手机号已注册' });
     next(error);
   }
 });
@@ -124,6 +161,71 @@ app.post('/api/auth/login', authLimiter, async (req, res, next) => {
     }
     issueAuthCookie(res, user);
     return res.json({ user: { id: user.id, email: user.email } });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/auth/sms-code', authLimiter, async (req, res, next) => {
+  try {
+    const phone = normalizePhone(req.body.phone);
+    const purpose = req.body.purpose === 'reset' ? 'reset' : 'login';
+    if (!phone) return res.status(400).json({ error: '请输入有效的 11 位手机号' });
+
+    const result = await query('SELECT id FROM users WHERE phone = $1', [phone]);
+    if (!result.rows[0]) return res.status(404).json({ error: '该手机号尚未绑定数码名片账号' });
+
+    const sent = createVirtualSmsCode(phone, purpose);
+    if (sent.error) return res.status(429).json({ error: sent.error });
+    return res.json({
+      message: '虚拟短信验证码已生成，有效期 5 分钟。',
+      demo_code: sent.code,
+      expires_in: 300,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/auth/login/phone', authLimiter, async (req, res, next) => {
+  try {
+    const phone = normalizePhone(req.body.phone);
+    if (!phone) return res.status(400).json({ error: '请输入有效的 11 位手机号' });
+    if (!consumeVirtualSmsCode(phone, 'login', req.body.code)) {
+      return res.status(401).json({ error: '验证码错误或已过期，请重新获取' });
+    }
+
+    const result = await query('SELECT id, email, phone FROM users WHERE phone = $1', [phone]);
+    const user = result.rows[0];
+    if (!user) return res.status(401).json({ error: '该手机号尚未绑定数码名片账号' });
+    issueAuthCookie(res, user);
+    return res.json({ user });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/api/auth/password/reset', authLimiter, async (req, res, next) => {
+  try {
+    const phone = normalizePhone(req.body.phone);
+    const password = String(req.body.password || '');
+    if (!phone) return res.status(400).json({ error: '请输入有效的 11 位手机号' });
+    if (password.length < 8 || password.length > 72) {
+      return res.status(400).json({ error: '新密码需为 8–72 个字符' });
+    }
+    if (!consumeVirtualSmsCode(phone, 'reset', req.body.code)) {
+      return res.status(401).json({ error: '验证码错误或已过期，请重新获取' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const result = await query(
+      'UPDATE users SET password_hash = $1 WHERE phone = $2 RETURNING id, email, phone',
+      [passwordHash, phone],
+    );
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ error: '该手机号尚未绑定数码名片账号' });
+    issueAuthCookie(res, user);
+    return res.json({ user, message: '密码已重设，已为你登录。' });
   } catch (error) {
     next(error);
   }

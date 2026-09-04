@@ -32,6 +32,12 @@
 - 2026-08-26 — 官网产品目录：编辑器可从已保存的公司官网抓取同域产品详情页，提取名称、关键简介、缩略图和链接并去重；公开页采用左图右文的单列精品目录，适合较多产品连续浏览。
 - 2026-08-26 — 名片夹工作台：新增桌面双栏、移动端主从切换的联系人浏览页；左侧突出姓名、公司和三个关键词，右侧组合 3:2 名片与纵向产品目录，并使用 18 个模拟联系人验证长列表、搜索与切换。
 - 2026-08-26 — 首页示例名片：取消桌面端与手机端的装饰性旋转，保持卡片边缘水平垂直，以更准确传达实体名片尺寸与版式。
+- 2026-08-27 — 智能文字与语音录入：编辑器新增本地文字字段识别、可选覆盖和焦点定向语音输入；沿用品牌色、暖金辅助色、表单与按钮状态，并在 HTTP 环境提供系统听写回退说明。
+- 2026-08-27 — 官网产品导入入口：将“从公司网址导入”提升到产品栏标题右侧，保留抓取说明与实时状态；手机端按钮自动折叠为全宽，减少寻找入口的成本。
+- 2026-08-27 — 文字头像排版：无图片时最多显示四个名称字符；四字采用 2×2 田字格，三字采用上一起下并列的品字形，一至二字保持横向居中，并随头像尺寸继承缩放。
+- 2026-08-27 — 名片夹分段浏览：右侧顶部增加每 10 张一段的序号范围下拉框，显示起止序号与总数；切换后按原始序号刷新左侧名单并自动打开该段首张名片，搜索结果独立重算范围。
+- 2026-09-02 — 多方式登录：登录页沿用暖白与品牌绿 token，提供邮箱密码、手机号虚拟验证码和手机号找回密码；手机号在注册时可选绑定，验证码仅用于当前 MVP 演示且 5 分钟失效。
+- 2026-09-04 — 编辑页滚动：长表单的纵向滚动显式由文档页面承接，并允许触摸惯性滚动与底部安全区留白；名片夹固定工作台的滚动规则不受影响。
 
 ## Components
 
@@ -45,7 +51,11 @@
 - 3:2 艺术化公开名片：`public/card.js`、`public/styles.css`
 - 官网产品抓取与横向精品目录：`server/site-import.js`、`server/index.js`、`public/editor.html`、`public/editor.js`、`public/card.js`
 - 双栏名片夹与模拟联系人：`public/directory.html`、`public/directory.js`、`public/styles.css`
+- 智能文字填写与语音定点修改：`public/editor.html`、`public/editor.js`、`public/text-parser.js`、`public/styles.css`
 - Toast、空状态、加载骨架：`public/app.js`、`public/styles.css`
+- 自适应文字头像：`public/app.js`、`public/editor.js`、`public/card.js`、`public/directory.js`、`public/styles.css`
+- 名片夹序号范围下拉分页：`public/directory.html`、`public/directory.js`、`public/styles.css`
+- 多方式登录与虚拟验证码：`public/auth.html`、`public/auth.js`、`server/index.js`、`server/schema.sql`、`public/styles.css`
 
 ## Responsive behavior
 

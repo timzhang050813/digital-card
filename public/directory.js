@@ -1,4 +1,4 @@
-import { api, createImage, initials } from './app.js';
+import { api, createImage, createInitials } from './app.js';
 
 const shell = document.querySelector('#directory-shell');
 const list = document.querySelector('#directory-contact-list');
@@ -7,8 +7,10 @@ const search = document.querySelector('#directory-search');
 const detail = document.querySelector('#directory-detail-inner');
 const selectedName = document.querySelector('#selected-name');
 const selectedPublicLink = document.querySelector('#selected-public-link');
+const rangeSelect = document.querySelector('#directory-range');
 const detailScroll = document.querySelector('#directory-detail-scroll');
 const slug = new URLSearchParams(window.location.search).get('slug');
+const pageSize = 10;
 
 const demoProfiles = [
   ['张永祥', '上海卡精智能科技有限公司', '光谱分析师 · 系统工程师', ['太阳模拟', '光谱系统', '上海']],
@@ -20,7 +22,7 @@ const demoProfiles = [
   ['沈亦航', '深蓝环境科技', '解决方案架构师', ['环境舱', '系统集成', '工程']],
   ['许安然', '启明检测实验室', '实验室主任', ['检测', '认证', '标准']],
   ['赵一川', '云阶科技', '联合创始人', ['AI 产品', '数据', '平台']],
-  ['顾清和', '衡度工业设计', '工业设计师', ['硬件设计', '结构', '量产']],
+  ['欧阳清和', '衡度工业设计', '工业设计师', ['硬件设计', '结构', '量产']],
   ['唐书宁', '青禾新材料', '市场负责人', ['新材料', '市场', '合作']],
   ['苏明哲', '极昼光电', '光源产品经理', ['LED 光源', '光催化', '产品']],
   ['方若岚', '万象科研服务', '商务发展经理', ['科研服务', '高校', '项目']],
@@ -33,6 +35,7 @@ const demoProfiles = [
 
 let contacts = [];
 let selectedId = '';
+let currentPage = 0;
 
 function textElement(tag, className, text) {
   const element = document.createElement(tag);
@@ -45,7 +48,7 @@ function avatarElement(card, className, palette = 0) {
   const avatar = document.createElement('span');
   avatar.className = `${className} directory-palette-${palette % 5}`;
   if (card.avatar_url) avatar.append(createImage(card.avatar_url, `${card.name}头像`));
-  else avatar.textContent = initials(card.name);
+  else avatar.append(createInitials(card.name));
   return avatar;
 }
 
@@ -187,15 +190,45 @@ function renderDetail(contact) {
   });
 }
 
-function renderList(query = '') {
+function matchingContacts(query = '') {
   const normalized = query.trim().toLowerCase();
-  const visible = contacts.filter((contact) => [
+  return contacts.filter((contact) => [
     contact.card.name,
     contact.card.company_name,
     contact.card.job_title,
     ...contact.keywords,
   ].join(' ').toLowerCase().includes(normalized));
+}
+
+function renderRangeOptions(total) {
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  if (currentPage >= pageCount) currentPage = 0;
+  rangeSelect.replaceChildren();
+  if (!total) {
+    const option = document.createElement('option');
+    option.value = '0';
+    option.textContent = '0–0 / 0';
+    rangeSelect.append(option);
+    rangeSelect.disabled = true;
+    return;
+  }
+  rangeSelect.disabled = false;
+  for (let page = 0; page < pageCount; page += 1) {
+    const start = page * pageSize + 1;
+    const end = Math.min((page + 1) * pageSize, total);
+    const option = document.createElement('option');
+    option.value = String(page);
+    option.textContent = `${start}–${end} / ${total}`;
+    rangeSelect.append(option);
+  }
+  rangeSelect.value = String(currentPage);
+}
+
+function renderList(query = '') {
+  const visible = matchingContacts(query);
   count.textContent = `${visible.length}`;
+  renderRangeOptions(visible.length);
+  const pageContacts = visible.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   list.replaceChildren();
   if (!visible.length) {
     const empty = document.createElement('div');
@@ -204,9 +237,9 @@ function renderList(query = '') {
     empty.append(textElement('h3', '', '没有匹配的名片'));
     empty.append(textElement('p', '', '换一个姓名、公司或关键词试试。'));
     list.append(empty);
-    return;
+    return [];
   }
-  visible.forEach((contact) => {
+  pageContacts.forEach((contact) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'directory-contact-button';
@@ -219,17 +252,18 @@ function renderList(query = '') {
     const top = document.createElement('span');
     top.className = 'directory-contact-name-row';
     top.append(textElement('strong', '', contact.card.name));
-    top.append(textElement('small', '', String(contact.products.length).padStart(2, '0')));
+    top.append(textElement('small', '', String(contact.sequence).padStart(2, '0')));
     copy.append(top, textElement('span', 'directory-contact-company', contact.card.company_name));
     copy.append(textElement('span', 'directory-contact-keywords', contact.keywords.slice(0, 3).join(' · ')));
     button.append(copy);
     button.addEventListener('click', () => {
       renderDetail(contact);
-      renderList(search.value);
       shell.classList.add('is-detail-open');
     });
     list.append(button);
   });
+  list.scrollTop = 0;
+  return pageContacts;
 }
 
 function buildContacts(baseCard, products) {
@@ -254,11 +288,20 @@ function buildContacts(baseCard, products) {
       website: isOriginal ? baseCard.website : '',
       address: isOriginal ? baseCard.address : `${baseCard.region || '上海'} · 演示联系人`,
     };
-    return { id: `contact-${index}`, card, products: rotatedProducts, keywords, palette: index, isOriginal };
+    return { id: `contact-${index}`, sequence: index + 1, card, products: rotatedProducts, keywords, palette: index, isOriginal };
   });
 }
 
-search.addEventListener('input', () => renderList(search.value));
+search.addEventListener('input', () => {
+  currentPage = 0;
+  const pageContacts = renderList(search.value);
+  if (pageContacts[0]) renderDetail(pageContacts[0]);
+});
+rangeSelect.addEventListener('change', () => {
+  currentPage = Number(rangeSelect.value) || 0;
+  const pageContacts = renderList(search.value);
+  if (pageContacts[0]) renderDetail(pageContacts[0]);
+});
 document.querySelector('#directory-back').addEventListener('click', () => shell.classList.remove('is-detail-open'));
 
 try {
@@ -269,8 +312,8 @@ try {
     if (!data.card) throw new Error('请先创建一张名片');
   }
   contacts = buildContacts(data.card, data.products || []);
-  renderList();
-  renderDetail(contacts[0]);
+  const pageContacts = renderList();
+  if (pageContacts[0]) renderDetail(pageContacts[0]);
 } catch (error) {
   list.replaceChildren();
   const empty = document.createElement('div');

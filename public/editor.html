@@ -7,7 +7,7 @@
   <title>我的名片｜数码名片</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body class="editor-page">
   <header class="site-header">
     <nav class="nav container" aria-label="主导航">
       <a class="brand" href="/">
@@ -59,6 +59,40 @@
               <pre id="scan-raw-text"></pre>
             </div>
             <p class="form-error" id="scan-error" role="alert"></p>
+          </section>
+
+          <!-- These direct-entry controls have no collection empty state or loader; their live status text covers idle, success, and unsupported states. -->
+          <section class="smart-entry-panel" aria-labelledby="smart-entry-heading">
+            <div class="smart-entry-intro">
+              <div class="smart-entry-icon" aria-hidden="true">文</div>
+              <div>
+                <h3 id="smart-entry-heading">从文字智能填写</h3>
+                <p>粘贴一段个人或公司介绍，自动识别并放入姓名、公司、职务、电话、邮箱等对应位置。</p>
+              </div>
+            </div>
+            <div class="field smart-text-field">
+              <label for="smart-card-text">名片文字</label>
+              <textarea class="textarea" id="smart-card-text" maxlength="2000" placeholder="例如：我叫张永祥，是上海卡精智能科技有限公司的系统工程师，擅长光谱分析。手机 138……，邮箱……"></textarea>
+            </div>
+            <div class="smart-entry-actions">
+              <label class="smart-overwrite" for="smart-overwrite">
+                <input id="smart-overwrite" type="checkbox">
+                <span>覆盖已有内容</span>
+              </label>
+              <button class="button button-secondary" id="smart-fill-button" type="button" disabled>识别并填写</button>
+            </div>
+            <div class="smart-fill-result" id="smart-fill-result" role="status" aria-live="polite">文字仅在当前浏览器内解析，不会上传。</div>
+
+            <div class="voice-entry" aria-labelledby="voice-entry-heading">
+              <div class="smart-entry-icon voice-entry-icon" aria-hidden="true">声</div>
+              <div class="voice-entry-copy">
+                <h3 id="voice-entry-heading">语音定点修改</h3>
+                <p>先点击下面任意文字输入框，再点击语音按钮；说出的内容会写到光标所在位置。</p>
+                <span class="voice-target" id="voice-target">当前未选择输入框</span>
+                <span class="voice-status" id="voice-status" role="status" aria-live="polite">也可以直接使用 Windows 的 Win + H 或手机键盘麦克风。</span>
+              </div>
+              <button class="button" id="voice-button" type="button" aria-pressed="false" disabled>开始语音输入</button>
+            </div>
           </section>
 
           <div id="editor-loading" aria-label="正在加载名片">
@@ -209,15 +243,22 @@
       </div>
 
       <section class="panel products-section" aria-labelledby="products-heading">
-        <h2 id="products-heading">产品与作品</h2>
-        <p class="section-copy">从公司官网提取产品，也可以手动补充；公开页会以精致的横向目录展示。</p>
+        <div class="products-heading-bar">
+          <div class="products-heading-copy">
+            <h2 id="products-heading">产品与作品</h2>
+            <p class="section-copy">从公司官网提取产品，也可以手动补充；公开页会以精致的横向目录展示。</p>
+          </div>
+          <button class="button button-secondary products-import-button" id="import-products" type="button">
+            <span aria-hidden="true">↗</span>
+            从公司网址导入
+          </button>
+        </div>
         <div class="product-import-bar">
           <div class="product-import-icon" aria-hidden="true">链</div>
           <div class="product-import-copy">
-            <strong>从公司官网抓取</strong>
+            <strong>自动整理官网产品</strong>
             <span>自动识别产品名称、关键介绍、缩略图和详情链接，已有链接不会重复添加。</span>
           </div>
-          <button class="button button-secondary" id="import-products" type="button">抓取官网产品</button>
           <p class="product-import-status" id="product-import-status" role="status"></p>
         </div>
         <form class="product-form" id="product-form" enctype="multipart/form-data">

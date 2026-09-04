@@ -1,4 +1,4 @@
-import { api, createImage, initials } from './app.js';
+import { api, createImage, createInitials } from './app.js';
 
 const root = document.querySelector('#card-root');
 const slug = new URLSearchParams(window.location.search).get('slug');
@@ -66,7 +66,7 @@ function renderCard(card, products) {
   const avatar = document.createElement('div');
   avatar.className = 'public-avatar';
   if (card.avatar_url) avatar.append(createImage(card.avatar_url, `${card.name}头像`));
-  else avatar.textContent = initials(card.name);
+  else avatar.append(createInitials(card.name));
   const type = document.createElement('span');
   type.className = 'card-type-label';
   type.textContent = 'DIGITAL IDENTITY';

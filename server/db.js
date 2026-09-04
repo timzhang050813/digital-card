@@ -31,6 +31,21 @@ export async function initDatabase() {
 
   const schema = await fs.readFile(path.join(__dirname, 'schema.sql'), 'utf8');
   await adapter.exec(schema);
+
+  // PGlite intentionally keeps v2 embeddings in JSONB so the offline demo has
+  // no native-extension dependency. A deployed PostgreSQL instance can use the
+  // same rows with pgvector's native type when the extension is available.
+  if (process.env.DATABASE_URL) {
+    try {
+      await adapter.exec('CREATE EXTENSION IF NOT EXISTS vector');
+      await adapter.exec(
+        'ALTER TABLE entity_embeddings ADD COLUMN IF NOT EXISTS embedding_vector vector(1536)',
+      );
+    } catch (error) {
+      console.warn('pgvector 未启用：向量将暂存于 entity_embeddings.embedding_json。', error.message);
+    }
+  }
+
   return engineName;
 }
 

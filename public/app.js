@@ -45,7 +45,21 @@ export function setBusy(button, busy, busyLabel = '处理中…') {
 
 export function initials(name = '') {
   const chars = Array.from(name.trim());
-  return chars.slice(0, 2).join('').toUpperCase() || '名片';
+  return chars.slice(0, 4).join('').toUpperCase() || '名片';
+}
+
+// AvatarInitials is a display primitive; its host card/list owns loading and empty states.
+export function createInitials(name = '') {
+  const text = initials(name);
+  const mark = document.createElement('span');
+  mark.className = `avatar-initials avatar-initials-${Array.from(text).length}`;
+  mark.setAttribute('aria-hidden', 'true');
+  Array.from(text).forEach((character) => {
+    const glyph = document.createElement('span');
+    glyph.textContent = character;
+    mark.append(glyph);
+  });
+  return mark;
 }
 
 export function createImage(src, alt) {
@@ -60,4 +74,3 @@ export async function logout() {
   await api('/api/auth/logout', { method: 'POST' });
   window.location.href = '/';
 }
-

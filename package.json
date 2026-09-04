@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --watch server/index.js",
     "start": "node server/index.js",
-    "check": "node --check server/index.js && node --check server/site-import.js && node --check public/app.js && node --check public/auth.js && node --check public/editor.js && node --check public/card.js && node --check public/directory.js"
+    "check": "node --check server/index.js && node --check server/site-import.js && node --check public/app.js && node --check public/auth.js && node --check public/text-parser.js && node --check public/editor.js && node --check public/card.js && node --check public/directory.js"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.10",

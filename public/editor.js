@@ -1,4 +1,5 @@
-import { api, createImage, initials, logout, setBusy, showToast } from './app.js';
+import { api, createImage, createInitials, logout, setBusy, showToast } from './app.js';
+import { parseCardText } from './text-parser.js';
 
 const form = document.querySelector('#card-form');
 const loading = document.querySelector('#editor-loading');
@@ -15,6 +16,13 @@ const scanInput = document.querySelector('#business-card-image');
 const scanButton = document.querySelector('#scan-button');
 const scanError = document.querySelector('#scan-error');
 const scanResult = document.querySelector('#scan-result');
+const smartTextInput = document.querySelector('#smart-card-text');
+const smartOverwriteInput = document.querySelector('#smart-overwrite');
+const smartFillButton = document.querySelector('#smart-fill-button');
+const smartFillResult = document.querySelector('#smart-fill-result');
+const voiceButton = document.querySelector('#voice-button');
+const voiceTarget = document.querySelector('#voice-target');
+const voiceStatus = document.querySelector('#voice-status');
 const avatarInput = document.querySelector('#avatar');
 const avatarPreview = document.querySelector('#avatar-preview');
 const miniAvatar = document.querySelector('#mini-avatar');
@@ -37,6 +45,9 @@ let card = null;
 let products = [];
 let objectUrl = '';
 let qrObjectUrl = '';
+let activeVoiceField = null;
+let speechRecognition = null;
+let voiceListening = false;
 
 const scanFieldLabels = {
   name: '姓名 / 主名称',
@@ -49,12 +60,55 @@ const scanFieldLabels = {
   wechat: '微信号',
   website: '官网 / 个人主页',
   address: '详细地址',
+  tagline: '一句话简介',
+  expertise: '专业 / 擅长领域',
+  main_business: '主营业务 / 服务',
+  founded_at: '公司成立时间',
+  team_size: '团队规模',
+  region: '所在地区',
+  bio: '简介文字',
 };
+
+function inputLabel(input) {
+  return scanFieldLabels[input?.name] || input?.name || '当前输入框';
+}
+
+function applySuggestions(suggestions, overwrite = false) {
+  const applied = [];
+  const skipped = [];
+  for (const [fieldName, value] of Object.entries(suggestions)) {
+    const input = form.elements[fieldName];
+    if (!input || !value) continue;
+    if (!overwrite && input.value.trim()) {
+      skipped.push(scanFieldLabels[fieldName] || fieldName);
+      continue;
+    }
+    const limit = Number(input.maxLength) > 0 ? Number(input.maxLength) : String(value).length;
+    input.value = String(value).slice(0, limit);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    applied.push(scanFieldLabels[fieldName] || fieldName);
+  }
+  updatePreview();
+  return { applied, skipped };
+}
+
+function setVoiceTarget(input) {
+  activeVoiceField = input;
+  voiceTarget.textContent = `当前填写：${inputLabel(input)}`;
+  voiceButton.disabled = false;
+}
+
+function setVoiceListening(listening) {
+  voiceListening = listening;
+  voiceButton.setAttribute('aria-pressed', String(listening));
+  voiceButton.classList.toggle('is-listening', listening);
+  voiceButton.textContent = listening ? '停止语音输入' : '开始语音输入';
+}
 
 function setAvatar(container, src, name) {
   container.replaceChildren();
   if (src) container.append(createImage(src, `${name || '名片'}头像`));
-  else container.textContent = initials(name);
+  else container.append(createInitials(name));
 }
 
 function setQrPreview(src) {
@@ -226,6 +280,89 @@ async function removeProduct(product, button) {
 
 form.addEventListener('input', updatePreview);
 
+smartTextInput.addEventListener('input', () => {
+  smartFillButton.disabled = !smartTextInput.value.trim() || form.hidden;
+  if (!smartTextInput.value.trim()) smartFillResult.textContent = '文字仅在当前浏览器内解析，不会上传。';
+});
+
+smartFillButton.addEventListener('click', () => {
+  const suggestions = parseCardText(smartTextInput.value);
+  const fields = Object.keys(suggestions);
+  if (!fields.length) {
+    smartFillResult.textContent = '暂时没有识别出明确字段。可以使用“姓名：”“公司：”“职务：”等标签后再试。';
+    showToast('没有识别出可填写的信息', 'error');
+    return;
+  }
+  const { applied, skipped } = applySuggestions(suggestions, smartOverwriteInput.checked);
+  if (applied.length) {
+    smartFillResult.textContent = `已填写 ${applied.length} 项：${applied.join('、')}${skipped.length ? `；另有 ${skipped.length} 项因已有内容而跳过` : ''}。请核对后保存。`;
+    showToast(`已智能填写 ${applied.length} 项`);
+  } else {
+    smartFillResult.textContent = `识别到 ${fields.length} 项，但对应位置已有内容。勾选“覆盖已有内容”后可替换。`;
+  }
+});
+
+form.addEventListener('focusin', (event) => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) return;
+  if (input.type === 'file' || input.type === 'hidden' || input.disabled || input.readOnly) return;
+  setVoiceTarget(input);
+});
+
+voiceButton.addEventListener('click', () => {
+  if (!activeVoiceField) return;
+  if (voiceListening) {
+    speechRecognition?.stop();
+    return;
+  }
+  if (!window.isSecureContext) {
+    voiceStatus.textContent = '当前是 HTTP 测试地址，浏览器不允许网站调用麦克风。请先点输入框，再按 Win + H；配置 HTTPS 后此按钮可直接使用。';
+    activeVoiceField.focus();
+    return;
+  }
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) {
+    voiceStatus.textContent = '当前浏览器不支持网页语音识别。请使用 Win + H 或手机键盘上的麦克风。';
+    activeVoiceField.focus();
+    return;
+  }
+
+  speechRecognition = new Recognition();
+  speechRecognition.lang = 'zh-CN';
+  speechRecognition.continuous = false;
+  speechRecognition.interimResults = true;
+  const start = activeVoiceField.selectionStart ?? activeVoiceField.value.length;
+  const end = activeVoiceField.selectionEnd ?? start;
+  const prefix = activeVoiceField.value.slice(0, start);
+  const suffix = activeVoiceField.value.slice(end);
+
+  speechRecognition.onstart = () => {
+    setVoiceListening(true);
+    voiceStatus.textContent = `正在听写到“${inputLabel(activeVoiceField)}”…`;
+  };
+  speechRecognition.onresult = (event) => {
+    const transcript = Array.from(event.results).map((result) => result[0].transcript).join('');
+    const limit = Number(activeVoiceField.maxLength) > 0
+      ? Number(activeVoiceField.maxLength)
+      : `${prefix}${transcript}${suffix}`.length;
+    activeVoiceField.value = `${prefix}${transcript}${suffix}`.slice(0, limit);
+    const caret = Math.min(prefix.length + transcript.length, activeVoiceField.value.length);
+    activeVoiceField.setSelectionRange?.(caret, caret);
+    activeVoiceField.dispatchEvent(new Event('input', { bubbles: true }));
+    voiceStatus.textContent = `已识别：${transcript}`;
+  };
+  speechRecognition.onerror = (event) => {
+    const messages = {
+      'not-allowed': '没有获得麦克风权限，请在浏览器地址栏允许麦克风。',
+      'no-speech': '没有听到语音，请靠近麦克风后重试。',
+      network: '语音识别服务暂时不可用，请稍后再试。',
+    };
+    voiceStatus.textContent = messages[event.error] || '语音识别没有完成，请重试。';
+  };
+  speechRecognition.onend = () => setVoiceListening(false);
+  speechRecognition.start();
+});
+
 scanInput.addEventListener('change', () => {
   const filename = scanInput.files[0]?.name;
   document.querySelector('#scan-file-name').textContent = filename || 'JPG、PNG、WebP 或 GIF，最大 5MB';
@@ -336,6 +473,7 @@ try {
   renderProducts();
   loading.hidden = true;
   form.hidden = false;
+  smartFillButton.disabled = !smartTextInput.value.trim();
 } catch (error) {
   if (error.status === 401) window.location.href = '/auth.html?mode=login';
   else {

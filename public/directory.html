@@ -52,7 +52,16 @@
             <p>当前名片</p>
             <h2 id="selected-name">正在加载…</h2>
           </div>
-          <a class="button button-secondary button-small" id="selected-public-link" href="#">打开公开名片</a>
+          <div class="directory-detail-actions">
+            <!-- The range select is a control primitive; the contact list owns loading and empty states. -->
+            <label class="directory-range-control" for="directory-range">
+              <span class="visually-hidden">选择名片序号范围</span>
+              <select class="directory-range-select" id="directory-range" aria-label="选择名片序号范围" disabled>
+                <option>0–0 / 0</option>
+              </select>
+            </label>
+            <a class="button button-secondary button-small" id="selected-public-link" href="#">打开公开名片</a>
+          </div>
         </header>
         <div class="directory-detail-scroll" id="directory-detail-scroll">
           <div class="directory-detail-inner" id="directory-detail-inner">
